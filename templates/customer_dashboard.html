@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — DriveNow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Welcome back, {{ session.username }} 👋</h1>
+  <p>Browse our fleet and book your next vehicle.</p>
+</div>
+
+<!-- Category quick-links -->
+<div class="filter-bar" style="margin-bottom:2rem;">
+  <a href="{{ url_for('search') }}" class="filter-btn">All Cars</a>
+  {% for cat in categories %}
+    <a href="{{ url_for('search', category=cat['category']) }}" class="filter-btn">{{ cat['category'] }}</a>
+  {% endfor %}
+</div>
+
+<div class="flex-between">
+  <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;">Available Vehicles</h2>
+  <a href="{{ url_for('search') }}" class="btn btn-outline btn-sm">View All →</a>
+</div>
+
+{% set icons = {'Sedan':'🚗','SUV':'🚙','Sports':'🏎️','Luxury':'🚘','Electric':'⚡','Hatchback':'🚕'} %}
+
+<div class="card-grid">
+  {% for car in cars %}
+  <div class="car-card">
+    <div class="car-card-thumb">
+      {{ icons.get(car['category'], '🚗') }}
+    </div>
+    <div class="car-card-body">
+      <div class="category">{{ car['category'] }}</div>
+      <h3>{{ car['model'] }}</h3>
+      <div class="price">${{ "%.2f"|format(car['price_per_day']) }} <span>/ day</span></div>
+      <div style="margin-top:auto;display:flex;gap:.5rem;">
+        <a href="{{ url_for('car_details', car_id=car['id']) }}" class="btn btn-outline btn-sm">Details</a>
+        <a href="{{ url_for('book_car', car_id=car['id']) }}" class="btn btn-primary btn-sm">Book</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div style="margin-top:2.5rem;text-align:center;">
+  <a href="{{ url_for('reservations') }}" class="btn btn-secondary">View My Reservations</a>
+</div>
+{% endblock %}

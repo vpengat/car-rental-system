@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Book {{ car['model'] }} — DriveNow{% endblock %}
+
+{% block content %}
+{% set icons = {'Sedan':'🚗','SUV':'🚙','Sports':'🏎️','Luxury':'🚘','Electric':'⚡','Hatchback':'🚕'} %}
+
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('car_details', car_id=car['id']) }}" class="btn btn-outline btn-sm">← Back to Details</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
+  <!-- Car summary -->
+  <div class="card" style="padding:1.5rem;">
+    <div style="font-size:4rem;text-align:center;margin-bottom:1rem;">
+      {{ icons.get(car['category'], '🚗') }}
+    </div>
+    <h2 style="font-family:'Playfair Display',serif;">{{ car['model'] }}</h2>
+    <p class="text-muted" style="margin:.3rem 0 .8rem;">{{ car['category'] }}</p>
+    <div class="price">${{ "%.2f"|format(car['price_per_day']) }} <span>/ day</span></div>
+    <hr>
+    <p class="text-muted" style="font-size:.85rem;">{{ car['description'] }}</p>
+  </div>
+
+  <!-- Booking form -->
+  <div class="form-card" style="max-width:100%;margin:0;">
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:1.3rem;">Confirm Your Booking</h2>
+    <form method="POST">
+      <div class="form-group">
+        <label for="pickup_date">📅 Pickup Date</label>
+        <input type="date" id="pickup_date" name="pickup_date" required
+               min="{{ '' }}" value="">
+      </div>
+      <div class="form-group">
+        <label for="dropoff_date">📅 Drop-off Date</label>
+        <input type="date" id="dropoff_date" name="dropoff_date" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Confirm Booking</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Set min dates to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('pickup_date').min = today;
+  document.getElementById('dropoff_date').min = today;
+
+  // Auto-update dropoff min when pickup changes
+  document.getElementById('pickup_date').addEventListener('change', function() {
+    document.getElementById('dropoff_date').min = this.value;
+  });
+</script>
+{% endblock %}

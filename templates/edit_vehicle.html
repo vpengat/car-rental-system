@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ car['model'] }} — DriveNow{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{{ url_for('manage_vehicles') }}" class="btn btn-outline btn-sm">← Back to Fleet</a>
+</div>
+
+<div class="page-header">
+  <h1>Edit Vehicle</h1>
+  <p>Updating: <strong>{{ car['model'] }}</strong></p>
+</div>
+
+<div class="form-card" style="max-width:560px;">
+  <form method="POST">
+    <div class="form-group">
+      <label for="model">Vehicle Model *</label>
+      <input type="text" id="model" name="model" value="{{ car['model'] }}" required>
+    </div>
+    <div class="form-group">
+      <label for="category">Category *</label>
+      <select id="category" name="category" required>
+        {% for cat in ['Sedan','SUV','Sports','Luxury','Electric','Hatchback','Van','Truck'] %}
+          <option value="{{ cat }}" {% if car['category'] == cat %}selected{% endif %}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="price_per_day">Price per Day ($) *</label>
+      <input type="number" id="price_per_day" name="price_per_day"
+             step="0.01" min="1" value="{{ car['price_per_day'] }}" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description">{{ car['description'] }}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="checkbox-group">
+        <input type="checkbox" id="availability" name="availability"
+               {% if car['availability'] %}checked{% endif %}>
+        <label for="availability">Mark as available</label>
+      </div>
+    </div>
+    <hr>
+    <div style="display:flex;gap:.75rem;">
+      <button type="submit" class="btn btn-success">Save Changes</button>
+      <a href="{{ url_for('manage_vehicles') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

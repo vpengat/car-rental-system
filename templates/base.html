@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DriveNow{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="{{ url_for('index') }}">Drive<span>Now</span></a>
+  <ul>
+    {% if session.role == 'customer' %}
+      <li><a href="{{ url_for('customer_dashboard') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('search') }}">Search Cars</a></li>
+      <li><a href="{{ url_for('reservations') }}">My Bookings</a></li>
+    {% elif session.role == 'staff' %}
+      <li><a href="{{ url_for('staff_dashboard') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('manage_vehicles') }}">Manage Vehicles</a></li>
+      <li><a href="{{ url_for('add_vehicle') }}">Add Vehicle</a></li>
+    {% endif %}
+    <span class="nav-user">👤 {{ session.username }}</span>
+    <li><a href="{{ url_for('logout') }}" class="nav-logout">Logout</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flash-list">
+        {% for cat, msg in messages %}
+          <li class="flash {{ cat }}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

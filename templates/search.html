@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Search Cars — DriveNow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Search Vehicles</h1>
+  <p>Filter by category to find your perfect car.</p>
+</div>
+
+<div class="filter-bar">
+  <a href="{{ url_for('search') }}" class="filter-btn {% if not selected %}active{% endif %}">All</a>
+  {% for cat in categories %}
+    <a href="{{ url_for('search', category=cat['category']) }}"
+       class="filter-btn {% if selected == cat['category'] %}active{% endif %}">
+      {{ cat['category'] }}
+    </a>
+  {% endfor %}
+</div>
+
+{% set icons = {'Sedan':'🚗','SUV':'🚙','Sports':'🏎️','Luxury':'🚘','Electric':'⚡','Hatchback':'🚕'} %}
+
+{% if cars %}
+<div class="card-grid">
+  {% for car in cars %}
+  <div class="car-card">
+    <div class="car-card-thumb">{{ icons.get(car['category'], '🚗') }}</div>
+    <div class="car-card-body">
+      <div class="category">{{ car['category'] }}</div>
+      <h3>{{ car['model'] }}</h3>
+      <p class="text-muted" style="font-size:.82rem;margin-bottom:.6rem;">{{ car['description'][:70] }}…</p>
+      <div class="price">${{ "%.2f"|format(car['price_per_day']) }} <span>/ day</span></div>
+      <div style="margin-top:auto;display:flex;gap:.5rem;">
+        <a href="{{ url_for('car_details', car_id=car['id']) }}" class="btn btn-outline btn-sm">Details</a>
+        <a href="{{ url_for('book_car', car_id=car['id']) }}" class="btn btn-primary btn-sm">Book Now</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🔍</div>
+  <h3>No cars available</h3>
+  <p>There are no available cars in the <strong>{{ selected }}</strong> category right now.</p>
+  <a href="{{ url_for('search') }}" class="btn btn-outline" style="margin-top:1rem;">Browse All</a>
+</div>
+{% endif %}
+{% endblock %}
