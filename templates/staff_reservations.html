@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}All Reservations — DriveNow{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>All Reservations</h1>
+  <p>View all customer bookings in the system.</p>
+</div>
+
+<div style="margin-bottom: 1rem;">
+  <a href="{{ url_for('staff_dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+</div>
+
+{% if reservations %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Vehicle</th>
+        <th>Category</th>
+        <th>Pickup</th>
+        <th>Drop-off</th>
+        <th>Price/Day</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reservations %}
+      <tr>
+        <td>{{ r['id'] }}</td>
+        <td>{{ r['username'] }}</td>
+        <td>{{ r['model'] }}</td>
+        <td>{{ r['category'] }}</td>
+        <td>{{ r['pickup_date'] }}</td>
+        <td>{{ r['dropoff_date'] }}</td>
+        <td>${{ r['price_per_day'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="empty-state">
+  <h3>No reservations found</h3>
+  <p>No customers have made bookings yet.</p>
+</div>
+{% endif %}
+
+{% endblock %}

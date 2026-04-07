@@ -22,6 +22,7 @@
           <th>Pickup</th>
           <th>Drop-off</th>
           <th>Rate / Day</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -33,6 +34,12 @@
           <td>{{ r['pickup_date'] }}</td>
           <td>{{ r['dropoff_date'] }}</td>
           <td>${{ "%.2f"|format(r['price_per_day']) }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('cancel_reservation', reservation_id=r['id']) }}"
+                  onsubmit="return confirm('Cancel this reservation?')">
+              <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

@@ -110,30 +110,46 @@ def car_details(car_id):
 def book_car(car_id):
     if 'user_id' not in session or session['role'] != 'customer':
         return redirect(url_for('login'))
+
     db = get_db()
-    car = db.execute(
-        'SELECT * FROM cars WHERE id = ? AND availability = 1', (car_id,)
-    ).fetchone()
+    car = db.execute('SELECT * FROM cars WHERE id = ?', (car_id,)).fetchone()
+
     if not car:
-        flash('This car is not available for booking.', 'error')
         db.close()
+        flash('Car not found.', 'error')
         return redirect(url_for('search'))
 
     if request.method == 'POST':
         pickup = request.form['pickup_date']
         dropoff = request.form['dropoff_date']
+
         if pickup >= dropoff:
             flash('Drop-off date must be after pickup date.', 'error')
         else:
-            db.execute(
-                'INSERT INTO reservations (user_id, car_id, pickup_date, dropoff_date) VALUES (?, ?, ?, ?)',
-                (session['user_id'], car_id, pickup, dropoff)
-            )
-            db.execute('UPDATE cars SET availability = 0 WHERE id = ?', (car_id,))
-            db.commit()
-            db.close()
-            flash('Booking confirmed! Enjoy your ride.', 'success')
-            return redirect(url_for('reservations'))
+            conflict = db.execute(
+                '''
+                SELECT * FROM reservations
+                WHERE car_id = ?
+                AND pickup_date < ?
+                AND dropoff_date > ?
+                ''',
+                (car_id, dropoff, pickup)
+            ).fetchone()
+
+            if conflict:
+                flash('This car is already booked for the selected dates.', 'error')
+            elif car['availability'] == 0:
+                flash('This car is not available for booking.', 'error')
+            else:
+                db.execute(
+                    'INSERT INTO reservations (user_id, car_id, pickup_date, dropoff_date) VALUES (?, ?, ?, ?)',
+                    (session['user_id'], car_id, pickup, dropoff)
+                )
+                db.execute('UPDATE cars SET availability = 0 WHERE id = ?', (car_id,))
+                db.commit()
+                db.close()
+                flash('Booking confirmed! Enjoy your ride.', 'success')
+                return redirect(url_for('reservations'))
 
     db.close()
     return render_template('booking.html', car=car)
@@ -145,7 +161,7 @@ def reservations():
         return redirect(url_for('login'))
     db = get_db()
     rows = db.execute(
-        '''SELECT r.id, r.pickup_date, r.dropoff_date,
+        '''SELECT r.id, r.car_id, r.pickup_date, r.dropoff_date,
                   c.model, c.category, c.price_per_day
            FROM reservations r
            JOIN cars c ON r.car_id = c.id
@@ -155,6 +171,43 @@ def reservations():
     ).fetchall()
     db.close()
     return render_template('reservations.html', reservations=rows)
+
+
+@app.route('/cancel-reservation/<int:reservation_id>', methods=['POST'])
+def cancel_reservation(reservation_id):
+    if 'user_id' not in session or session['role'] != 'customer':
+        return redirect(url_for('login'))
+
+    db = get_db()
+
+    reservation = db.execute(
+        '''SELECT * FROM reservations
+           WHERE id = ? AND user_id = ?''',
+        (reservation_id, session['user_id'])
+    ).fetchone()
+
+    if not reservation:
+        db.close()
+        flash('Reservation not found.', 'error')
+        return redirect(url_for('reservations'))
+
+    car_id = reservation['car_id']
+
+    db.execute('DELETE FROM reservations WHERE id = ?', (reservation_id,))
+
+    remaining = db.execute(
+        'SELECT * FROM reservations WHERE car_id = ?',
+        (car_id,)
+    ).fetchone()
+
+    if not remaining:
+        db.execute('UPDATE cars SET availability = 1 WHERE id = ?', (car_id,))
+
+    db.commit()
+    db.close()
+
+    flash('Reservation cancelled successfully.', 'success')
+    return redirect(url_for('reservations'))
 
 
 # ──────────────────────────────────────────────
@@ -170,10 +223,32 @@ def staff_dashboard():
     available = db.execute('SELECT COUNT(*) FROM cars WHERE availability = 1').fetchone()[0]
     total_bookings = db.execute('SELECT COUNT(*) FROM reservations').fetchone()[0]
     db.close()
-    return render_template('staff_dashboard.html',
-                           total_cars=total_cars,
-                           available=available,
-                           total_bookings=total_bookings)
+    return render_template(
+        'staff_dashboard.html',
+        total_cars=total_cars,
+        available=available,
+        total_bookings=total_bookings
+    )
+
+
+@app.route('/staff-reservations')
+def staff_reservations():
+    if 'user_id' not in session or session['role'] != 'staff':
+        return redirect(url_for('login'))
+
+    db = get_db()
+    rows = db.execute(
+        '''SELECT r.id, r.pickup_date, r.dropoff_date,
+                  u.username,
+                  c.model, c.category, c.price_per_day
+           FROM reservations r
+           JOIN users u ON r.user_id = u.id
+           JOIN cars c ON r.car_id = c.id
+           ORDER BY r.id DESC'''
+    ).fetchall()
+    db.close()
+
+    return render_template('staff_reservations.html', reservations=rows)
 
 
 @app.route('/manage-vehicles')
